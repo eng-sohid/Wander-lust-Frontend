@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { authClient } from "@/lib/auth-client";
 
 type FormState = {
   name: string;
@@ -101,16 +102,20 @@ export default function AddDestinationPage() {
     event.preventDefault();
     console.log(form);
 
+    const { data } = await authClient.token();
+    const token = data?.token;
+
     const res = await fetch("http://localhost:8000/add-destination", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(form),
     });
 
-    const data = await res.json();
-    console.log(data);
+    const result = await res.json();
+    console.log(result);
 
     const nextErrors = validate(form);
     setErrors(nextErrors);

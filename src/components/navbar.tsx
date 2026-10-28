@@ -22,7 +22,7 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "Destinations", href: "/destinations" },
   { label: "Add Destination", href: "/add-destination" },
-  { label: "My Bookings", href: "/bookings" },
+  { label: "My Bookings", href: "/my-bookings" },
 ];
 
 const linkClasses =

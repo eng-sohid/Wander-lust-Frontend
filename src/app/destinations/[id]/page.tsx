@@ -16,6 +16,8 @@ import DeleteButton from "../../../components/Destinations/Delete button";
 import BookingCard from "../../../components/Destinations/Booking card ";
 import EditDestinationDialog from "@/components/Destinations/EditDestinationDialog";
 
+import { getAuthHeaders } from "@/lib/Api";
+
 type Destination = {
   _id: string;
   name: string;
@@ -56,8 +58,12 @@ const DestinationDetailsPage = async (
   let error: string | null = null;
 
   try {
+    const authHeaders = await getAuthHeaders();
+    if (!authHeaders) throw new Error("You need to log in to see this page");
+
     const res = await fetch(`http://localhost:8000/destination/${id}`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
+      headers: authHeaders,
     });
     if (!res.ok) throw new Error("Failed to fetch destination");
     destination = await res.json();
@@ -278,6 +284,10 @@ const DestinationDetailsPage = async (
               <BookingCard
                 id={d._id}
                 name={d.name}
+                country={d.country}
+                imageUrl={d.imageUrl}
+                duration={d.duration}
+                departureDate={d.departureDate}
                 price={d.price}
                 dateLabel={shortDate}
                 perks={PERKS}

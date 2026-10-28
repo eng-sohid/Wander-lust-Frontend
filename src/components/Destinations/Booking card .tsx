@@ -1,13 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check, Minus, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Check, CircleCheck, Minus, Plus } from "lucide-react";
+
+import { authClient } from "@/lib/auth-client";
+import { createBooking } from "../../lib/Actions";
 
 type Props = {
   id: string;
   name: string;
+  country: string;
+  imageUrl: string;
+  duration: string;
+  departureDate: string; // raw value from the database
   price: number;
-  dateLabel: string | null;
+  dateLabel: string | null; // formatted for display
   perks: string[];
 };
 
@@ -17,18 +26,66 @@ const MAX = 10;
 export default function BookingCard({
   id,
   name,
+  country,
+  imageUrl,
+  duration,
+  departureDate,
   price,
   dateLabel,
   perks,
 }: Props) {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+
   const [travelers, setTravelers] = useState(1);
+  const [booking, setBooking] = useState(false);
+  const [booked, setBooked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const total = price * travelers;
   const fmt = (n: number) => `$${n.toLocaleString("en-US")}`;
 
-  // TODO: replace with your real booking action (e.g. router.push(`/bookings/new?destination=${id}&travelers=${travelers}`))
-  const handleBook = () => {
-    console.log("Book", { id, name, travelers, total });
+  const changeTravelers = (next: number) => {
+    setTravelers(Math.min(MAX, Math.max(MIN, next)));
+    setBooked(false);
+    setError(null);
   };
+
+  const handleBook = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    setError(null);
+    setBooking(true);
+    const result = await createBooking({
+      userId: user.id,
+      userName: user.name,
+      userEmail: user.email,
+      userImage: user.image ?? null,
+      destinationId: id,
+      destinationName: name,
+      country,
+      imageUrl,
+      duration,
+      departureDate,
+      pricePerPerson: price,
+      travelers,
+      totalPrice: total,
+    });
+    setBooking(false);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setBooked(true);
+  };
+
+  const buttonLabel = booking ? "Booking..." : booked ? "Booked" : "Book Now";
+  const buttonDisabled = booking || booked || isPending;
 
   return (
     <>
@@ -51,7 +108,7 @@ export default function BookingCard({
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => setTravelers((t) => Math.max(MIN, t - 1))}
+              onClick={() => changeTravelers(travelers - 1)}
               disabled={travelers <= MIN}
               aria-label="Remove a traveler"
               className="flex size-7 items-center justify-center border border-[#d9d9d9] bg-white text-[#333] transition-colors hover:border-[#1aa6cf] hover:text-[#1aa6cf] disabled:opacity-40 disabled:hover:border-[#d9d9d9] disabled:hover:text-[#333]"
@@ -66,7 +123,7 @@ export default function BookingCard({
             </span>
             <button
               type="button"
-              onClick={() => setTravelers((t) => Math.min(MAX, t + 1))}
+              onClick={() => changeTravelers(travelers + 1)}
               disabled={travelers >= MAX}
               aria-label="Add a traveler"
               className="flex size-7 items-center justify-center border border-[#d9d9d9] bg-white text-[#333] transition-colors hover:border-[#1aa6cf] hover:text-[#1aa6cf] disabled:opacity-40 disabled:hover:border-[#d9d9d9] disabled:hover:text-[#333]"
@@ -88,11 +145,51 @@ export default function BookingCard({
         <button
           type="button"
           onClick={handleBook}
-          className="group mt-4 flex h-11 w-full items-center justify-center gap-2 bg-[#17a2c4] text-xs font-medium text-white transition-colors hover:bg-[#1499c5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#17a2c4]"
+          disabled={buttonDisabled}
+          className="group mt-4 flex h-11 w-full items-center justify-center gap-2 bg-[#17a2c4] text-xs font-medium text-white transition-colors hover:bg-[#1499c5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#17a2c4] disabled:opacity-70"
         >
-          Book Now
-          <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+          {buttonLabel}
+          {!booked && (
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+          )}
         </button>
+
+        {!user && !isPending && (
+          <p className="mt-2 text-center text-[11px] font-light text-[#777]">
+            You need to{" "}
+            <Link
+              href="/login"
+              className="font-medium text-[#17a2c4] hover:underline"
+            >
+              log in
+            </Link>{" "}
+            to book this trip.
+          </p>
+        )}
+
+        {error && (
+          <p role="alert" className="mt-3 text-xs text-red-500">
+            {error}
+          </p>
+        )}
+
+        {booked && (
+          <div
+            role="status"
+            className="mt-3 flex items-start gap-2 border border-green-200 bg-green-50 px-3 py-2.5 text-xs text-green-800"
+          >
+            <CircleCheck className="mt-0.5 size-4 shrink-0 text-green-600" />
+            <div>
+              <p className="font-medium">Booking request sent!</p>
+              <Link
+                href="/my-bookings"
+                className="mt-0.5 inline-block font-medium underline"
+              >
+                View my bookings
+              </Link>
+            </div>
+          </div>
+        )}
 
         <ul className="mt-4 space-y-2">
           {perks.map((p) => (
@@ -120,10 +217,11 @@ export default function BookingCard({
         <button
           type="button"
           onClick={handleBook}
-          className="flex h-10 items-center gap-2 bg-[#17a2c4] px-6 text-xs font-medium text-white hover:bg-[#1499c5]"
+          disabled={buttonDisabled}
+          className="flex h-10 items-center gap-2 bg-[#17a2c4] px-6 text-xs font-medium text-white hover:bg-[#1499c5] disabled:opacity-70"
         >
-          Book Now
-          <ArrowRight className="size-4" />
+          {buttonLabel}
+          {!booked && <ArrowRight className="size-4" />}
         </button>
       </div>
     </>
