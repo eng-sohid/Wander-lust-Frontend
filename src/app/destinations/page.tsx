@@ -7,7 +7,7 @@ const AllDestinationsPage = async () => {
   let error: string | null = null;
 
   try {
-    const res = await fetch("http://localhost:8000/destinations", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/destinations`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) throw new Error("Failed to fetch destinations");

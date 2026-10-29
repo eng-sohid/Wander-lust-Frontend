@@ -6,7 +6,7 @@ const FeaturedDestinations = async () => {
   let destinations: FeaturedDestination[] = [];
 
   try {
-    const res = await fetch("http://localhost:8000/destinations", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/destinations`, {
       next: { revalidate: 60 },
     });
     if (res.ok) destinations = await res.json();

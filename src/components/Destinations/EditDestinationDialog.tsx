@@ -107,7 +107,7 @@ export default function EditDestinationDialog({
     setSaving(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/destination/${destination._id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/destination/${destination._id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

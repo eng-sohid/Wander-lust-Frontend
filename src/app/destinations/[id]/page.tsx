@@ -61,10 +61,13 @@ const DestinationDetailsPage = async (
     const authHeaders = await getAuthHeaders();
     if (!authHeaders) throw new Error("You need to log in to see this page");
 
-    const res = await fetch(`http://localhost:8000/destination/${id}`, {
-      cache: "no-store",
-      headers: authHeaders,
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/destination/${id}`,
+      {
+        cache: "no-store",
+        headers: authHeaders,
+      },
+    );
     if (!res.ok) throw new Error("Failed to fetch destination");
     destination = await res.json();
   } catch (err) {

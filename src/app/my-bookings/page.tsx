@@ -69,7 +69,7 @@ const MyBookingsPage = async () => {
 
   try {
     const res = await fetch(
-      `http://localhost:8000/my-bookings/${encodeURIComponent(user.email)}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/my-bookings/${encodeURIComponent(user.email)}`,
       { cache: "no-store", headers: authHeaders },
     );
     if (!res.ok) throw new Error("Failed to fetch bookings");

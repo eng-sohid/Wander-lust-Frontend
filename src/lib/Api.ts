@@ -4,7 +4,8 @@ import { auth } from "@/lib/auth";
 
 // Server-only helper. Never import this from a "use client" component.
 
-export const API_URL = process.env.API_URL ?? "http://localhost:8000";
+export const API_URL =
+  process.env.API_URL ?? `${process.env.NEXT_PUBLIC_API_URL}`;
 
 // Asks better-auth for a short-lived JWT of the logged-in user.
 // Returns null when nobody is logged in.

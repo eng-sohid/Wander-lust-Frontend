@@ -105,14 +105,17 @@ export default function AddDestinationPage() {
     const { data } = await authClient.token();
     const token = data?.token;
 
-    const res = await fetch("http://localhost:8000/add-destination", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/add-destination`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(form),
       },
-      body: JSON.stringify(form),
-    });
+    );
 
     const result = await res.json();
     console.log(result);

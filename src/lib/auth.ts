@@ -10,16 +10,30 @@ export const auth = betterAuth({
   database: mongodbAdapter(db, {
     client,
   }),
+
+  trustedOrigins: [
+    "https://wanderlust-omega-woad.vercel.app",
+    "http://localhost:3000",
+  ],
+
   emailAndPassword: {
     enabled: true,
   },
 
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+
   plugins: [jwt()],
+
   session: {
     cookieCache: {
       enabled: true,
       strategy: "jwt",
-      maxAge: 7 * 25 * 60 * 60,
+      maxAge: 7 * 24 * 60 * 60,
     },
   },
 });
